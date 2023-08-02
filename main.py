@@ -13,6 +13,11 @@ if len(sys.argv) <= 1:
 tcpSerSock = socket(AF_INET, SOCK_STREAM)
 tcpSerSock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 # Fill in start.
+# Meo meo meo meo trả lại tâm trí tôi đây
+# Cứ như mèo con tắm nắng trong khu vườn nhà
+# Rất trong lành có ong lòng em có anh
+# Mới chỉ được gặp anh mỗi lúc ban chiều là ưng
+# Quá chừng lòng em cứ tưng tứng tưng tưng
 # Fill in end.
 while 1:
     # Strat receiving data from the client
