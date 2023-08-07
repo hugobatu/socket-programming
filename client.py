@@ -1,11 +1,16 @@
-import socket
+import socket 
 
-HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 65432  # The port used by the server
+# Như mình đã nói ở trên thì chúng ta không truyền tham số vào vẫn ok
+s = socket.socket()
+s.connect(("localhost", 4000)) 
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
-    s.sendall(b"Hello, world")
-    data = s.recv(1024)
+# 1024 là số bytes mà client có thể nhận được trong 1 lần
+# Phần tin nhắn đầu tiên
+msg = s.recv(1024)
 
-    print(f"Received {data!r}")
+# Phần tin nhắn tiếp theo 
+while msg:
+  print("Recvied ", msg.decode())
+  msg = s.recv(1024)
+
+s.close()
