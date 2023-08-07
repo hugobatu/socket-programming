@@ -15,6 +15,8 @@ pageSrc = """<!DOCTYPE html>
 </body>
 </html>"""
 
+pageUrl = "http://frogfind.com/"
+
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
 host = 'localhost'
 port = 4000
@@ -27,10 +29,10 @@ def runTask(c, addr):
     # c.send(b"Bye\nHwllo world, programmed to work but not to feel")
     
     msg = c.recv(1024)
-    # print(msg.decode())
+    print(msg.decode())
     
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.connect(("http://info.cern.ch/", 80))
+    server.connect(("example.com", 80))
     server.send(b"GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n")
     data = server.recv(4096)
     print(f"From page: {data.decode()}")
