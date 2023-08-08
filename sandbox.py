@@ -4,7 +4,7 @@ from rich import print
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-pageSrc = """<!DOCTYPE html>
+page = """<!DOCTYPE html>
 <html lang="en">
 <head>
 		<meta charset="UTF-8">
@@ -22,33 +22,40 @@ pageUrl = "http://frogfind.com/"
 host = 'localhost'
 port = 4000
 
+# TODO: append to turn relative JS script to absolute
 def proxy(url):
 	url = url.lstrip("/").rstrip("/")
 	
 	print(f"Url: {url}")
 	
 	hostPage = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	hostPage.connect((url, 80))
-	sendMsg = "GET / HTTP/1.1\r\n"\
-				"Host:" + url + "\r\n\r\n"
-	hostPage.send(sendMsg.encode())
+	try:
+		hostPage.connect((url, 80))
+		sendMsg = "GET / HTTP/1.0\r\n"\
+					"Host:" + url + "\r\n\r\n"
+		hostPage.send(sendMsg.encode())
 
-	data = hostPage.recv(4096)
+		data = hostPage.recv(4096)
+	except:
+		data = page.encode()
 	
 	soup = BeautifulSoup(data.decode(), "html.parser")
 	for a in soup.findAll('img'):
 		if (a['src'].find(url) == -1):
 			a['src'] = "#"
 	
-	return soup
+	return data
 
 def runTask(c, addr):
 	while True:
+		print("Start loop")
 		msg = c.recv(1024)
 		if (not msg):
+			print("No message")
 			c.close()
 			return
 		
+		print("Message received")
 		intro = str(datetime.now()) + "| Connect from " + str(addr)
 		print(intro)
 		#server sử dụng kết nối gửi dữ liệu tới client dưới dạng binary
@@ -62,14 +69,17 @@ def runTask(c, addr):
 		if (msgList[0] == "GET"):
 			print("Proxy")
 			pageSrc = proxy(msgList[1])
-			print(pageSrc)
+			print(pageSrc.decode())
 			
 			sent = 0
-			print(f"Amount to send: {len(pageSrc)}")
-			while sent < len(pageSrc):
-				sent = sent + c.send(pageSrc.encode()[sent:])
-				print(f"Sent: {sent}")
-		
+			print(f"Amount to send: {len(pageSrc.decode())}")
+			# while sent < len(pageSrc.decode()):
+			""" sent = sent +  """
+			print("Bytes sent: ", c.send(pageSrc))
+				# print(f"Sent: {sent}")
+			
+		c.close()
+		break
 		# server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		# server.connect(("example.com", 80))
 		# server.send(b"GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n")
