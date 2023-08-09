@@ -18,6 +18,10 @@ tcpSerSock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 # Rất trong lành có ong lòng em có anh
 # Mới chỉ được gặp anh mỗi lúc ban chiều là ưng
 # Quá chừng lòng em cứ tưng tứng tưng tưng
+# Vậy là lần cuối đi bên nhau
+# Cay đắng nhưng không đau
+# Nhưng nếu ai cũng mang tội thì em mong đợi gì nơi tôi
+
 # Fill in end.
 while 1:
     # Strat receiving data from the client
