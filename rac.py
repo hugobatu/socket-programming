@@ -2,19 +2,61 @@ from rich import print
 from bs4 import BeautifulSoup
 import socket 
 
-def getPageSrc():
+def getImage():
+	HOST = 'frogfind.com'
+	PORT = 80
+	mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	mysock.connect((HOST, PORT))
+	print(f"Sending: GET http://frogfind.com/img/frogfind.gif HTTP/1.0\r\n\r\n")
+	mysock.sendall(b'GET http://frogfind.com/img/frogfind.gif HTTP/1.0\r\n\r\n')
+	count = 0
+	picture = b""
+
+	while True:
+		data = mysock.recv(5120)
+		if len(data) < 1: break
+		#time.sleep(0.25)
+		count = count + len(data)
+		print(len(data), count)
+		picture = picture + data
+
+	mysock.close()
+
+	# Look for the end of the header (2 CRLF)
+	pos = picture.find(b"\r\n\r\n")
+	print('Header length', pos)
+	print(picture[:pos].decode())
+
+	print(picture)
+
+	# Skip past the header and save the picture data
+	picture = picture[pos+4:]
+	fhand = open("stuff.jpg", "wb")
+	fhand.write(picture)
+	fhand.close()
+
+def getPageSrc(url = ""):
 	# URLs to try:
 	# example.com
 	# frogfind.com
 	# info.cern.ch
-	host = "pmichaud.com/toast"
+	
+	if url != "":
+		host = url.split("/")[0]
+	else:
+		host = "pmichaud.com"
+		url = host
+		
 	port = 80
 
+	print(f"URL: {host}")
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
 	s.connect((host, port))
-	sendMsg = "GET / HTTP/1.1\r\n"\
-			"Host:" + host + "\r\n\r\n"
-	s.send(sendMsg.encode())
+	sendMsg = "GET http://" + url + " HTTP/1.0\r\n\r\n"
+	
+	print(f"Sending: {sendMsg}")
+	# return
+	s.sendall(sendMsg.encode())
 
 	data = s.recv(4096)
 
@@ -24,7 +66,7 @@ def getPageSrc():
 	#         a['src'] = host + "/" + a['src'].lstrip("/")
 
 
-	print(data.decode())
+	print(data)
 	
 	
 def sendPageSrc(data):
@@ -68,4 +110,6 @@ Content-Type: text/html; charset=ISO-8859-1;
 			c.close()
 			break
 		
-sendPageSrc("")
+# sendPageSrc("")
+# getPageSrc("frogfind.com/img/frogfind.gif")
+getImage()

@@ -19,12 +19,14 @@ page = """<!DOCTYPE html>
 pageUrl = "http://frogfind.com/"
 
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
-host = 'localhost'
+host = '192.168.56.1'
 port = 4000
 
-# TODO: append to turn relative JS script to absolute
+# TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
 def proxy(url):
-	url = url.lstrip("/").rstrip("/")
+	url = url.lstrip("/"
+		  ).rstrip("/")
+	url = url.replace("http:/", "").lstrip("/")
 	
 	print(f"Url: {url}")
 	
@@ -49,18 +51,18 @@ def proxy(url):
 def runTask(c, addr):
 	while True:
 		print("Start loop")
-		msg = c.recv(1024)
+		try:
+			msg = c.recv(1024)
+		except:
+			msg = ""
 		if (not msg):
 			print("No message")
 			c.close()
 			return
 		
-		print("Message received")
+		print(f"Message received: {msg}")
 		intro = str(datetime.now()) + "| Connect from " + str(addr)
 		print(intro)
-		#server sử dụng kết nối gửi dữ liệu tới client dưới dạng binary
-		# c.send(b"Hello, how are you")
-		# c.send(b"Bye\nHwllo world, programmed to work but not to feel")
 		
 		print(msg.decode())
 		
@@ -78,36 +80,6 @@ def runTask(c, addr):
 			print("Bytes sent: ", c.send(pageSrc))
 				# print(f"Sent: {sent}")
 			
-		c.close()
-		break
-		# server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		# server.connect(("example.com", 80))
-		# server.send(b"GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n")
-		# data = server.recv(4096)
-		# print(f"From page: {data.decode()}")
-		
-		
-		# c.send(b"HTTP/1.0 200 OK\n")
-		# c.send(b"Content-Type: text/html\n")
-		# c.send(b"\n")
-		# c.send(b"""
-		#     <html>
-		#     <body>
-		#     <h1>Hello World</h1> this is my server!
-		#     </body>
-		#     </html>
-		# """)
-		
-		# content = f"HTTP/1.1 200\r\nContent-Length: " + str(len(pageSrc)) + f"Content-Type: text/html\r\n" + pageSrc
-		# c.send(content.encode())
-		
-		# while True:
-		#   str = input("Enter your line: ")
-		#   c.send(str.encode())
-		
-		# msg = c.recv(2048)
-		# print(msg.decode())
-		
 		
 
 def main():
