@@ -1,6 +1,7 @@
 from rich import print
 from bs4 import BeautifulSoup
 import socket 
+import zlib
 
 def getImage():
 	HOST = 'frogfind.com'
@@ -41,6 +42,7 @@ def getPageSrc(url = ""):
 	# frogfind.com
 	# info.cern.ch
 	
+	# Neu url trong thi dung url default
 	if url != "":
 		host = url.split("/")[0]
 	else:
@@ -49,49 +51,31 @@ def getPageSrc(url = ""):
 		
 	port = 80
 
+	# In thu url (de test)
 	print(f"URL: {host}")
+	
+	# Ket noi voi trang web
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
 	s.connect((host, port))
-	sendMsg = "GET http://" + url + " HTTP/1.0\r\n\r\n"
 	
+	# Tao msg de khoi tao ket noi
+	sendMsg = "GET http://" + url + " HTTP/1.0\r\n\r\n"
 	print(f"Sending: {sendMsg}")
-	# return
+	
+	# Khoi tao ket noi
 	s.sendall(sendMsg.encode())
 
+	# Nhan lai HTML cua trang
 	data = s.recv(4096)
 
-	# soup = BeautifulSoup(data.decode(), "html.parser")
-	# for a in soup.findAll('img'):
-	#     if (a['src'].find(host) == -1):
-	#         a['src'] = host + "/" + a['src'].lstrip("/")
-
-
-	print(data)
+	# In HTML cua trang
+	print(data.decode())
 	
 	
 def sendPageSrc(data):
+	# data = data.encode()
 	if data == "":
-		data = """HTTP/1.1 200 OK
-Date: Tue, 08 Aug 2023 08:32:43 GMT
-Server: Apache
-Expires: Tue, 01 Jan 2002 00:00:00 GMT
-Cache-Control: no-cache
-Set-Cookie: imstime=1691483563; expires=Thu, 07-Sep-2023 08:32:43 GMT; Max-Age=2592000; path=/
-Last-Modified: Tue, 08 Aug 2023 08:32:43 GMT
-Connection: close
-Content-Type: text/html; charset=ISO-8859-1;
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>A page</title>
-</head>
-<body>
-		Hi there
-</body>
-</html>"""
+		data = testClientRequest()
 
 	while True:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -103,13 +87,65 @@ Content-Type: text/html; charset=ISO-8859-1;
 			c, addr = s.accept()
 			
 			print("About to send")
-			c.send(data.encode())
+			c.send(data)
 			
 			print("Sent")
 			
 			c.close()
 			break
 		
+def testClientRequest():
+	host = "oosc.online"
+	port = 80
+	
+	# Ket noi voi trang web
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+	s.connect((host, port))
+	
+	# Tao msg de khoi tao ket noi
+	sendMsg = f"GET / HTTP/1.0\r\nHost: {host}\r\n\r\n"
+	sendMsg = """GET http://oosc.online/Content/loginstyles.css HTTP/1.1
+Host: oosc.online
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Referer: http://oosc.online/
+Cookie: imstime=1691483563
+Pragma: no-cache
+Cache-Control: no-cache
+
+"""
+	print(f"Sending: {sendMsg}")
+	
+	
+	# Khoi tao ket noi
+	s.sendall(sendMsg.encode())
+
+	# Nhan lai HTML cua trang
+	data = s.recv(4096)
+
+	# In HTML cua trang
+	print("Receiving:")
+	print(data)
+	
+	return data
+		
 # sendPageSrc("")
-# getPageSrc("frogfind.com/img/frogfind.gif")
-getImage()
+getPageSrc()
+# testClientRequest()
+# getImage()
+
+
+# GET http://oosc.online/Content/loginstyles.css HTTP/1.1
+# Host: oosc.online
+# User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0
+# Accept: text/css,*/*;q=0.1
+# Accept-Language: en-US,en;q=0.5
+# Accept-Encoding: gzip, deflate
+# Connection: keep-alive
+# Referer: http://oosc.online/
+# Cookie: imstime=1691483563
+# Pragma: no-cache
+# Cache-Control: no-cache

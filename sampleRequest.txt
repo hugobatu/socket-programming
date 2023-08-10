@@ -1,0 +1,28 @@
+GET http://frogfind.com/ HTTP/1.1
+Host: frogfind.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+Pragma: no-cache
+Cache-Control: no-cache
+
+
+--------------------------------------------------------------------
+
+GET http://oosc.online/Content/loginstyles.css HTTP/1.1
+Host: oosc.online
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Referer: http://oosc.online/
+Cookie: imstime=1691483563
+Pragma: no-cache
+Cache-Control: no-cache
+
+
+--------------------------------------------------------------------
