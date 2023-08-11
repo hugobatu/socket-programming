@@ -1,6 +1,7 @@
 import socket 
 import threading
-from rich import print
+from rich.console import Console
+console = Console()
 from datetime import datetime
 from bs4 import BeautifulSoup
 
@@ -28,12 +29,15 @@ port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
 def sendMessage(clientRequest):
+	# Tach request cua Client tai moi dau cach, tao thanh mot mang chua cac thong tin
 	try:
 		requestList = clientRequest.decode().split()
+	# Neu khong the tach duoc -> Ket thuc ham
 	except:
-		print("Contains gzip")
+		console.print("Contains gzip")
 		return
 	
+	# Tim vi tri bat dau va ket thuc cua host, ie.Host: info.cern.ch
 	hostStartIndex = clientRequest.decode().find("Host: ") + 6
 	hostEndIndex = clientRequest.decode().find("\r\n", hostStartIndex)
 	
@@ -44,28 +48,31 @@ def sendMessage(clientRequest):
 	if resource[len(resource) - 1] == "/":
 		resource = resource[:len(resource) - 1]
 	
-	print(f"verb: {verb}, resource: {resource}, host: {host}")
+	console.print(f"verb: {verb}, resource: {resource}, host: {host}")
 	
 	return verb, resource, host
 	
 
 def proxy(url, msg):
-	url = url.lstrip("/" ).rstrip("/")
-	url = url.replace("http:/", "").lstrip("/")
-	
 	method, url, host = sendMessage(msg)
 	
-	print(f"Url: {url}")
+	console.print(f"Url: {url}")
 	
 	hostPage = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	
+	# Thu ket noi web server: Ket noi thanh cong -> Gui sendMsg toi server va nhan ket qua vao data
 	try:
+		# Ket noi toi web server
 		hostPage.connect((host, 80))
+		
+		# Tao request gui toi web server
 		sendMsg = f"{method} {url} HTTP/1.0\r\n"\
-					"Host:" + host + "\r\n\r\n"
+					"Host: " + host + "\r\n\r\n"
 					
-		print(f"Sending: {sendMsg}")
+		console.print(f"Sending: {sendMsg}")
 		hostPage.send(sendMsg.encode())
 
+		# Nhan ve ket qua server vao tung mau kich thuoc 4096 -> Gop lai thanh mot bai hoan chinh
 		response = b""
 		while True:
 			chunk = hostPage.recv(4096)
@@ -74,50 +81,71 @@ def proxy(url, msg):
 			response = response + chunk
 		
 		data = response
+	
+	# Ket noi khong thanh cong -> data = ket qua page ngat ket noi (da tao tu truoc)
 	except:
 		data = page.encode()
 	
+	# In ra ket qua nhan ve tu web server
+	# Neu khong co ky tu UNICODE trong data -> Moi dung duoc .decode (chuyen tu thong tin nhi phan sang string)
+	try:
+		console.print(f"--> :{data.decode()}", style="bold cyan")
+	# Neu co ky tu UNICODE trong data -> In tat ca duoi dang nhi phan
+	except:
+		console.print(f"--> :{data}", style="bold cyan")
+		
 	return data
 
 def runTask(c, addr):
 	while True:
-		print("Start loop")
+		console.print("------------------------------------------")
+		console.print("New user", style="bold green")
+		
+		# Nhan ve request cua Client (trinh duyet)
 		try:
 			msg = c.recv(1024)
 		except:
 			msg = ""
+			
 		if (not msg):
-			print("No message")
+			console.print("No message\n", style="bold red")
 			c.close()
 			return
 		
 		try:
-			print(f"Message received")
+			console.print(f"Message received")
 		except:
-			print("UnicodeDecodeError: 'utf-8' codec can't decode byte ...")
-		intro = str(datetime.now()) + "| Connect from " + str(addr)
-		print(intro)
+			console.print("UnicodeDecodeError: 'utf-8' codec can't decode byte ...")
+			
+		# In ra thong tin Client: thoi gian, dia chi IP
+		intro = str(datetime.now()) + " | Connect from " + str(addr)
+		console.print(intro, style="bold")
 		
+		# Phan tich cac thanh phan request cua Client va in ra: 
+		# Method (GET, HEAD, POST,...),
+		# Resource (ie. frogfind.com, oosc.online/style.css,...),
+		# Host: ten trang web
 		sendMessage(msg)
 		
+		# In request cua Client
 		try:
-			print(msg.decode())
+			console.print(msg.decode())
 		except:
-			print("Cannot decode UNICODE")
+			console.print("Cannot decode UNICODE", style="bold red")
 			return
 		
 		msgList = msg.decode().split()
 		
 		if (msgList[0] == "GET"):
-			print("Proxy")
+			console.print("Proxy")
 			pageSrc = proxy(msgList[1], msg)
 			
 			sent = 0
-			# print(f"Amount to send: {len(pageSrc.decode())}")
-			# while sent < len(pageSrc.decode()):
-			""" sent = sent +  """
-			print("Bytes sent: ", c.send(pageSrc))
-				# print(f"Sent: {sent}")
+			
+			# Gui ket qua cua web server ve lai Client
+			console.print("Bytes sent: ", c.send(pageSrc))
+				
+		c.close()
 			
 		
 
@@ -125,22 +153,18 @@ def main():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((host, port))
 
-	s.listen(3) # 1 ở đây có nghĩa chỉ chấp nhận 1 kết nối
-	print("Server listening on port", port)
+	s.listen(3) # 3 ở đây có nghĩa chỉ chấp nhận 3 kết nối
+	console.print("Server listening on port", port)
 
 
-
-	print("before the while loop")
 	while True:
 		try:
-			print("in the while loop")
+			console.print("Waiting for new user", style="bold yellow")
 			c, addr = s.accept()
-			# thread = threading.Thread(target = runTask, args = (c, addr))
-			# thread.start()
 			runTask(c, addr)
 			
 		except KeyboardInterrupt:
-			print("Closing program")
+			console.print("Closing program")
 			c.close()
 
 		
