@@ -2,6 +2,7 @@ from rich import print
 from bs4 import BeautifulSoup
 import socket 
 import zlib
+import os
 
 def getImage():
 	HOST = 'frogfind.com'
@@ -93,9 +94,38 @@ def sendPageSrc(data):
 			
 			c.close()
 			break
+	
+def createFile(file_name = "http://testing", content = "Content"):
+	if (file_name.find("http://") != -1):
+		file_name = file_name[6:]
+	print(file_name)
+	name = os.path.basename(os.path.normpath(file_name))
+	parentDirectory = os.path.dirname(file_name)
+	
+	if (parentDirectory  == "/"):
+		parentDirectory = "/" + name
+		name = "index.html"
+	
+	print("File name: ", name)
+	print("Parent directory: ", parentDirectory)
+	
+	absolutepath = os.path.abspath(__file__)
+
+	fileDirectory = os.path.join(os.path.dirname(absolutepath) + parentDirectory)
+	
+	if not os.path.exists(fileDirectory):
+		os.makedirs(fileDirectory)
+	
+	with open(os.path.join(fileDirectory, name), 'w') as fp:
+		fp.write(content)
+	
+	print("Write to file successfully")
+		
+def checkIfReal(fileName):
+	return os.path.isfile(fileName)
 		
 def testClientRequest():
-	host = "oosc.online"
+	host = "cdn.arduino.vn"
 	port = 80
 	
 	# Ket noi voi trang web
@@ -103,18 +133,13 @@ def testClientRequest():
 	s.connect((host, port))
 	
 	# Tao msg de khoi tao ket noi
-	sendMsg = f"GET / HTTP/1.0\r\nHost: {host}\r\n\r\n"
-	sendMsg = """GET http://oosc.online/Content/loginstyles.css HTTP/1.1
-Host: oosc.online
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0
-Accept: text/css,*/*;q=0.1
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate
-Connection: keep-alive
-Referer: http://oosc.online/
-Cookie: imstime=1691483563
-Pragma: no-cache
-Cache-Control: no-cache
+	# sendMsg = f"GET / HTTP/1.0\r\nHost: {host}\r\n\r\n"
+	sendMsg = """GET 
+http://cdn.arduino.vn/sites/default/files/advagg_js/js__H7iaPlLxx1emh5m2xX3myt3M4DBCtXhzblctqMO34bs__TUaMeJhrreQ5VVaKHvpoqi60
+2nMRLi7DKSdj9x-u1GI__NOesQBci7aUJhboX9mdIi6Jf56R3z92ZfrlxWvCiWe0.js HTTP/1.0
+Host: cdn.arduino.vn
+Connection: close
+
 
 """
 	print(f"Sending: {sendMsg}")
@@ -133,9 +158,11 @@ Cache-Control: no-cache
 	return data
 		
 # sendPageSrc("")
-getPageSrc()
+# getPageSrc()
 # testClientRequest()
 # getImage()
+createFile()
+# print(checkIfReal("testing/1/2/a"))
 
 
 # GET http://oosc.online/Content/loginstyles.css HTTP/1.1

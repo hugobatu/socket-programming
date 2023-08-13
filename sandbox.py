@@ -30,6 +30,26 @@ host = 'localhost'
 port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
+def createFile(file_name = "testing/1/2/3/do.txt", content = b"Content"):
+	file_name = file_name.strip("https://")
+	name = os.path.basename(os.path.normpath(file_name))
+	parentDirectory = os.path.dirname(file_name)
+	
+	# print("File name: ", name)
+	# print("Parent directory: ", parentDirectory)
+	
+	absolutepath = os.path.abspath(__file__)
+
+	fileDirectory = os.path.join(os.path.dirname(absolutepath) + parentDirectory)
+	
+	if not os.path.exists(fileDirectory):
+		os.makedirs(fileDirectory)
+	
+	with open(os.path.join(fileDirectory, name), 'wb') as fp:
+		fp.write(content)
+	
+	print(f"Write to {os.path.join(fileDirectory, name)} successfully")
+
 def sendMessage(clientRequest):
 	# Tach request cua Client tai moi dau cach, tao thanh mot mang chua cac thong tin
 	try:
@@ -39,7 +59,7 @@ def sendMessage(clientRequest):
 		console.print("Contains gzip")
 		return
 	
-	# Tim vi tri bat dau va ket thuc cua host, ie.Host: info.cern.ch
+	# Tim vi tri bat dau va ket thuc cua host, ie. Host: info.cern.ch
 	hostStartIndex = clientRequest.decode().find("Host: ") + 6
 	hostEndIndex = clientRequest.decode().find("\r\n", hostStartIndex)
 	
@@ -60,33 +80,53 @@ def proxy(url, msg):
 	
 	console.print(f"Url: {url}")
 	
-	hostPage = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	name = url
+	if (name.find("http://") != -1):
+		name = name[6:]
+	parentDirectory = os.path.dirname(name)
+	name = os.path.basename(os.path.normpath(name))
+	print(f"Name: {name}, Parent directory: {parentDirectory}")
 	
-	# Thu ket noi web server: Ket noi thanh cong -> Gui sendMsg toi server va nhan ket qua vao data
-	try:
-		# Ket noi toi web server
-		hostPage.connect((host, 80))
+	absolutepath = os.path.abspath(__file__)
+	fileDirectory = os.path.join(os.path.dirname(absolutepath) + parentDirectory)
+	
+	if not os.path.isfile(os.path.join(fileDirectory + "i", name)):
+		print(f"Get fresh source {os.path.join(fileDirectory, name)}")
+		hostPage = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		
-		# Tao request gui toi web server
-		sendMsg = f"{method} {url} HTTP/1.0\r\n"\
-					"Host: " + host + "\r\n\r\n"
-					
-		console.print(f"Sending: {sendMsg}")
-		hostPage.send(sendMsg.encode())
+		# Thu ket noi web server: Ket noi thanh cong -> Gui sendMsg toi server va nhan ket qua vao data
+		try:
+			# Ket noi toi web server
+			hostPage.connect((host, 80))
+			
+			# Tao request gui toi web server
+			sendMsg = f"{method} {url} HTTP/1.0\r\n"\
+						"Host: " + host + "\r\n\r\n"
+			
+			console.print(f"Sending: {sendMsg}")
+			hostPage.send(sendMsg.encode())
 
-		# Nhan ve ket qua server vao tung mau kich thuoc 4096 -> Gop lai thanh mot bai hoan chinh
-		response = b""
-		while True:
-			chunk = hostPage.recv(4096)
-			if len(chunk) == 0:     # No more data received, quitting
-				break
-			response = response + chunk
+			# Nhan ve ket qua server vao tung mau kich thuoc 4096 -> Gop lai thanh mot bai hoan chinh
+			response = b""
+			while True:
+				chunk = hostPage.recv(4096)
+				if len(chunk) == 0:     # No more data received, quitting
+					break
+				response = response + chunk
+			
+			data = response
+			print(f"aaaaaaaaaaaaaa: \n{data}")
+			
+			# createFile(url, data)
 		
-		data = response
-	
-	# Ket noi khong thanh cong -> data = ket qua page ngat ket noi (da tao tu truoc)
-	except:
-		data = page.encode()
+		# Ket noi khong thanh cong -> data = page (da tao tu truoc)
+		except Exception as e:
+			print(e)
+			data = page.encode()
+	else:
+		print(f"Taking from cache: {url}")
+		with open(os.path.join(fileDirectory, name), 'w') as fp:
+			data = page.encode()
 	
 	# In ra ket qua nhan ve tu web server
 	# Neu khong co ky tu UNICODE trong data -> Moi dung duoc .decode (chuyen tu thong tin nhi phan sang string)
@@ -94,24 +134,24 @@ def proxy(url, msg):
 		console.print(f"--> :{data.decode()}", style="bold cyan")
 	# Neu co ky tu UNICODE trong data -> In tat ca duoi dang nhi phan
 	except:
-		console.print(f"--> :{data}", style="bold cyan")
+		print(f"--> :{data}")
 		
 	return data
 
-def runTask(c, addr):
+def runTask(client, addr):
 	while True:
 		console.print("------------------------------------------")
 		console.print("New user", style="bold green")
 		
 		# Nhan ve request cua Client (trinh duyet)
 		try:
-			msg = c.recv(1024)
+			msg = client.recv(1024)
 		except:
 			msg = ""
 			
 		if (not msg):
 			console.print("No message\n", style="bold red")
-			c.close()
+			client.close()
 			return
 		
 		try:
@@ -145,9 +185,11 @@ def runTask(c, addr):
 			sent = 0
 			
 			# Gui ket qua cua web server ve lai Client
-			console.print("Bytes sent: ", c.send(pageSrc))
+			console.print("Bytes sent: ", client.send(pageSrc))
+		
+		
 				
-		c.close()
+		client.close()
 			
 #!/usr/bin/env python
 def getConfig():
@@ -158,22 +200,24 @@ cache_time, whitelisting, time = getConfig()
 
 
 def main():
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind((host, port))
+	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server.bind((host, port))
 
-	s.listen(3) # 3 ở đây có nghĩa chỉ chấp nhận 3 kết nối
+	server.listen(3) # 3 ở đây có nghĩa chỉ chấp nhận 3 kết nối
 	console.print("Server listening on port", port)
 
 
 	while True:
 		try:
 			console.print("Waiting for new user", style="bold yellow")
-			c, addr = s.accept()
-			runTask(c, addr)
+			client, addr = server.accept()
+			# thread = threading.Thread(target = runTask, args = (client, addr))
+			# thread.start()
+			runTask(client, addr)
 			
 		except KeyboardInterrupt:
 			console.print("Closing program")
-			c.close()
+			client.close()
 
 		
 if __name__ == "__main__":
