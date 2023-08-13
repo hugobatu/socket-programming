@@ -1,5 +1,7 @@
 import socket 
 import threading
+import configparser
+import json
 from rich.console import Console
 console = Console()
 from datetime import datetime
@@ -24,7 +26,7 @@ Content-Length: 0
 pageUrl = "http://frogfind.com/"
 
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
-host = '192.168.56.1'
+host = 'localhost'
 port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
@@ -147,7 +149,13 @@ def runTask(c, addr):
 				
 		c.close()
 			
-		
+#!/usr/bin/env python
+def getConfig():
+	fileConfig = open('config.json')
+	configs = json.load(fileConfig)
+	return configs['cache_time'], configs['whitelisting'], configs['time']		
+cache_time, whitelisting, time = getConfig()
+
 
 def main():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
