@@ -161,9 +161,16 @@ Connection: close
 # getPageSrc()
 # testClientRequest()
 # getImage()
-createFile()
+# createFile()
 # print(checkIfReal("testing/1/2/a"))
 
+# print(os.path.dirname(os.path.abspath(__file__)))
+
+filename = "c:/Users/phkhng/Documents/Code/socket-programming/cache/oosc.online/oosc.online/Content/fonts"
+print(filename)
+os.makedirs(os.path.dirname(filename), exist_ok=True)
+with open(filename, "w") as f:
+    f.write("FOOBAR")
 
 # GET http://oosc.online/Content/loginstyles.css HTTP/1.1
 # Host: oosc.online

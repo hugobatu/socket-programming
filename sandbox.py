@@ -2,6 +2,7 @@ import socket
 import threading
 import configparser
 import json
+import os
 from rich.console import Console
 console = Console()
 from datetime import datetime
@@ -30,25 +31,16 @@ host = 'localhost'
 port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
-def createFile(file_name = "testing/1/2/3/do.txt", content = b"Content"):
-	file_name = file_name.strip("https://")
-	name = os.path.basename(os.path.normpath(file_name))
-	parentDirectory = os.path.dirname(file_name)
+def createFile(fileName, content):
+	console.print(f"Creating {os.path.dirname(fileName)}", style="purple4")
 	
-	# print("File name: ", name)
-	# print("Parent directory: ", parentDirectory)
+	# Neu folder khong ton tai -> tao folder
+	os.makedirs(os.path.dirname(fileName), exist_ok=True)
 	
-	absolutepath = os.path.abspath(__file__)
-
-	fileDirectory = os.path.join(os.path.dirname(absolutepath) + parentDirectory)
+	# Ghi file
+	with open(fileName, "wb") as f:
+		f.write(content)
 	
-	if not os.path.exists(fileDirectory):
-		os.makedirs(fileDirectory)
-	
-	with open(os.path.join(fileDirectory, name), 'wb') as fp:
-		fp.write(content)
-	
-	print(f"Write to {os.path.join(fileDirectory, name)} successfully")
 
 def sendMessage(clientRequest):
 	# Tach request cua Client tai moi dau cach, tao thanh mot mang chua cac thong tin
@@ -63,6 +55,7 @@ def sendMessage(clientRequest):
 	hostStartIndex = clientRequest.decode().find("Host: ") + 6
 	hostEndIndex = clientRequest.decode().find("\r\n", hostStartIndex)
 	
+	# Cac bien de tra ve
 	verb = requestList[0]
 	resource = requestList[1]
 	host = clientRequest.decode()[hostStartIndex: hostEndIndex]
@@ -80,18 +73,26 @@ def proxy(url, msg):
 	
 	console.print(f"Url: {url}")
 	
-	name = url
-	if (name.find("http://") != -1):
-		name = name[6:]
-	parentDirectory = os.path.dirname(name)
-	name = os.path.basename(os.path.normpath(name))
-	print(f"Name: {name}, Parent directory: {parentDirectory}")
+	# Tao ten file de luu cache
+	# Xoa http://
+	name = url.replace("http://", "")
 	
-	absolutepath = os.path.abspath(__file__)
-	fileDirectory = os.path.join(os.path.dirname(absolutepath) + parentDirectory)
-	
-	if not os.path.isfile(os.path.join(fileDirectory + "i", name)):
-		print(f"Get fresh source {os.path.join(fileDirectory, name)}")
+	# Neu ten Resource khac ten Host -> them Resource o cuoi duong dan
+	if host != name:
+		fullPathName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache/", host, name)
+		# fullPathName = c:/Users/phkhng/Documents/Code/socket-programming/cache/oosc.online/index
+	# Neu giong nhau -> them index o cuoi duong dan
+	else:
+		fullPathName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache/", host, "index")
+		
+	fullPathName = fullPathName.replace("\\", "/")
+
+	print(f"Folder: {host}, name: {name}, full path: {fullPathName}")
+	# Ket thuc tao ten de luu cache
+
+	# Neu file cache cua request co ton tai -> Request nguon tu web server va luu cache
+	if not os.path.isfile(fullPathName):
+		console.print(f"Get fresh source", style="deep_pink3")
 		hostPage = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		
 		# Thu ket noi web server: Ket noi thanh cong -> Gui sendMsg toi server va nhan ket qua vao data
@@ -115,18 +116,19 @@ def proxy(url, msg):
 				response = response + chunk
 			
 			data = response
-			print(f"aaaaaaaaaaaaaa: \n{data}")
 			
-			# createFile(url, data)
+			createFile(fullPathName, data)
 		
 		# Ket noi khong thanh cong -> data = page (da tao tu truoc)
 		except Exception as e:
 			print(e)
-			data = page.encode()
+			data = page.encode("ISO-8859-1")
+	
+	# Neu file cache ton tai -> Lay nguon tu cache
 	else:
-		print(f"Taking from cache: {url}")
-		with open(os.path.join(fileDirectory, name), 'w') as fp:
-			data = page.encode()
+		console.print(f"Taking from cache: {fullPathName}", style="deep_pink3")
+		with open(fullPathName, "rb") as fp:
+			data = fp.read()
 	
 	# In ra ket qua nhan ve tu web server
 	# Neu khong co ky tu UNICODE trong data -> Moi dung duoc .decode (chuyen tu thong tin nhi phan sang string)
@@ -196,8 +198,7 @@ def getConfig():
 	fileConfig = open('config.json')
 	configs = json.load(fileConfig)
 	return configs['cache_time'], configs['whitelisting'], configs['time']		
-cache_time, whitelisting, time = getConfig()
-
+# cache_time, whitelisting, time = getConfig()
 
 def main():
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
