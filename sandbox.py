@@ -32,14 +32,17 @@ port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
 def createFile(fileName, content):
-	console.print(f"Creating {os.path.dirname(fileName)}", style="purple4")
-	
-	# Neu folder khong ton tai -> tao folder
-	os.makedirs(os.path.dirname(fileName), exist_ok=True)
-	
-	# Ghi file
-	with open(fileName, "wb") as f:
-		f.write(content)
+	try:
+		console.print(f"Creating {os.path.dirname(fileName)}", style="purple4")
+		
+		# Neu folder khong ton tai -> tao folder
+		os.makedirs(os.path.dirname(fileName), exist_ok=True)
+		
+		# Ghi file
+		with open(fileName, "wb") as f:
+			f.write(content)
+	except:
+		console.print("Wrong file path", style="red bold")
 	
 
 def sendMessage(clientRequest):
@@ -80,10 +83,10 @@ def proxy(url, msg):
 	# Neu ten Resource khac ten Host -> them Resource o cuoi duong dan
 	if host != name:
 		fullPathName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache/", host, name)
-		# fullPathName = c:/Users/phkhng/Documents/Code/socket-programming/cache/oosc.online/index
 	# Neu giong nhau -> them index o cuoi duong dan
 	else:
 		fullPathName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache/", host, "index")
+		# fullPathName = c:/Users/phkhng/Documents/Code/socket-programming/cache/oosc.online/index
 		
 	fullPathName = fullPathName.replace("\\", "/")
 
