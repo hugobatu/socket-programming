@@ -1,5 +1,6 @@
 import socket
 import os
+import datetime
 from rich import print
 from sandbox import *
 
@@ -11,7 +12,7 @@ def main():
     
     server.connect(("oosc.online", 80))
     
-    method, name, host = sendMessage(msg1.encode())
+    method, name, host = getRequestInfo(msg1.encode())
     server.send(msg1.encode())
     
     response = b""
@@ -39,4 +40,6 @@ def main():
     
     createFile(fullPathName, data)
     
-main()
+# main()
+
+print(datetime.fromtimestamp(os.path.getmtime("C:/Users/phkhng/Documents/Code/socket-programming/đuôi.mèo")))

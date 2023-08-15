@@ -31,6 +31,11 @@ host = 'localhost'
 port = 4000
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
+def getConfig():
+	fileConfig = open('config.mèo')
+	configs = json.load(fileConfig)
+	return configs['cache_time'], configs['whitelisting'], configs['time']		
+
 def createFile(fileName, content):
 	try:
 		console.print(f"Creating {os.path.dirname(fileName)}", style="purple4")
@@ -45,7 +50,7 @@ def createFile(fileName, content):
 		console.print("Wrong file path", style="red bold")
 	
 
-def sendMessage(clientRequest):
+def getRequestInfo(clientRequest):
 	# Tach request cua Client tai moi dau cach, tao thanh mot mang chua cac thong tin
 	try:
 		requestList = clientRequest.decode().split()
@@ -66,13 +71,13 @@ def sendMessage(clientRequest):
 	if resource[len(resource) - 1] == "/":
 		resource = resource[:len(resource) - 1]
 	
-	console.print(f"verb: {verb}, resource: {resource}, host: {host}")
+	# console.print(f"verb: {verb}, resource: {resource}, host: {host}")
 	
 	return verb, resource, host
 	
 
 def proxy(url, msg):
-	method, url, host = sendMessage(msg)
+	method, url, host = getRequestInfo(msg)
 	
 	console.print(f"Url: {url}")
 	
@@ -172,7 +177,7 @@ def runTask(client, addr):
 		# Method (GET, HEAD, POST,...),
 		# Resource (ie. frogfind.com, oosc.online/style.css,...),
 		# Host: ten trang web
-		sendMessage(msg)
+		getRequestInfo(msg)
 		
 		# In request cua Client
 		try:
@@ -196,14 +201,11 @@ def runTask(client, addr):
 				
 		client.close()
 			
-#!/usr/bin/env python
-def getConfig():
-	fileConfig = open('config.json')
-	configs = json.load(fileConfig)
-	return configs['cache_time'], configs['whitelisting'], configs['time']		
-# cache_time, whitelisting, time = getConfig()
-
 def main():
+	cache_time, whitelisting, time = getConfig()
+	
+	print(f"cache_time: {cache_time}, whitelisting: {whitelisting}, time: {time}")
+	
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.bind((host, port))
 
