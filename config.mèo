@@ -1,5 +1,6 @@
 {
     "cache_time": 900,
-    "whitelisting": "oosc.online",
+    "whitelisting": ["oosc.online", "example.com", "google.com", "bing.com", "testphp.vulnweb.com/login.php",
+    "vbsca.ca/login/login.asp", "vbsca.ca/login/", "vbsca.ca/login/"],
     "time": "8-20"
 }
