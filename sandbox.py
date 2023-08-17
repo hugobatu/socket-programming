@@ -173,7 +173,7 @@ def runTask(client, addr):
 		intro = str(datetime.now()) + " | Connect from " + str(addr)
 		console.print(intro, style="bold")
 		
-		# Phan tich cac thanh phan request cua Client va in ra: 
+		# Phan tich cac thanh phan request cua Client va tra ra: 
 		# Method (GET, HEAD, POST,...),
 		# Resource (ie. frogfind.com, oosc.online/style.css,...),
 		# Host: ten trang web
