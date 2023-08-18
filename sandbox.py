@@ -31,7 +31,13 @@ pageUrl = "http://frogfind.com/"
 host = 'localhost'
 port = 4000
 
-# def abridgedPrint(data):
+
+# abridged function added
+def abridgedPrint(data, limit):
+	if len(data) <= limit:
+		print(data)
+	else:
+		print(data[:limit-1] + ".")
 
 
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
