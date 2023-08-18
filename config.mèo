@@ -1,14 +1,8 @@
 {
     "cache_time": 900,
-    "whitelisting": [
-        "oosc.online",
-        "example.com",
-        "google.com",
-        "bing.com",
-        "testphp.vulnweb.com",
-        "vbsca.ca"
-    ],
-    "time": "1-7",
+    "time_out": 8,
+    "whitelisting": [],
+    "time": "8-23",
     "ext_to_save": [
         "ase",
         "art",
@@ -24,7 +18,6 @@
         "djvu",
         "egt",
         "exif",
-        "gif",
         "gpl",
         "grf",
         "icns",
