@@ -24,7 +24,6 @@ Content-Length: 0
 
 """
 
-global cache_time, whitelisting, time
 pageUrl = "http://frogfind.com/"
 
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
@@ -45,6 +44,8 @@ def getConfig():
 	fileConfig = open('config.mèo')
 	configs = json.load(fileConfig)
 	return configs['cache_time'], configs['whitelisting'], configs['time']		
+global cache_time, whitelisting, allowed_time
+cache_time, whitelisting, allowed_time = getConfig()
 
 def createFile(fileName, content):
 	try:
@@ -91,6 +92,8 @@ def checkCache(msg):
 	# Tao ten file de luu cache
 	# Xoa http://
 	name = url.replace("http://", "")
+	
+	
 	
 	# Neu ten Resource khac ten Host -> them Resource o cuoi duong dan
 	if host != name:
@@ -224,8 +227,13 @@ def runTask(client, addr):
 			console.print("Cannot decode UNICODE", style="bold red")
 			return
 		
-		# if (time.partition("-")[0] <= ):
-		
+		# 18-20
+		start = datetime.time(allowed_time.partition("-")[0], 0)
+		end = datetime.time(allowed_time.partition("-")[2], 0)
+		if not (start <= datetime.datetime.today().time() <= end):
+			client.send(page.encode())
+			client.close()
+			
 		msgList = msg.decode().split()
 		
 		# Cac thanh phan request cua Client: 
@@ -250,9 +258,7 @@ def runTask(client, addr):
 		client.close()
 			
 def main():
-	cache_time, whitelisting, time = getConfig()
-	
-	print(f"cache_time: {cache_time}, whitelisting: {whitelisting}, time: {time}")
+	print(f"cache_time: {cache_time}, whitelisting: {whitelisting}, time: {allowed_time}")
 	
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.bind((host, port))
