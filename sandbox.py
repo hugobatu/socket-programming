@@ -31,6 +31,9 @@ pageUrl = "http://frogfind.com/"
 host = 'localhost'
 port = 4000
 
+# def abridgedPrint(data):
+
+
 # TODO: append to turn relative JS script to absolute - update: damn i dont need to do that
 def getConfig():
 	fileConfig = open('config.mèo')
@@ -58,7 +61,7 @@ def getRequestInfo(clientRequest):
 	# Neu khong the tach duoc -> Ket thuc ham
 	except:
 		console.print("Contains gzip")
-		return
+		return	
 	
 	# Tim vi tri bat dau va ket thuc cua host, ie. Host: info.cern.ch
 	hostStartIndex = clientRequest.decode().find("Host: ") + 6
@@ -113,6 +116,12 @@ def proxy(url, msg):
 	cache, fullPathName, isExist = checkCache(msg)
 	
 	if (isExist):
+		cache = cache.partition(b"\r\n\r\n")[0]
+		try:
+			console.print(f"--> :{cache.decode()}", style="bold cyan")
+		# Neu co ky tu UNICODE trong data -> In tat ca duoi dang nhi phan
+		except:
+			print(f"--> :{cache}")
 		return cache
 	else:
 		print()
@@ -158,6 +167,9 @@ def proxy(url, msg):
 		print(e)
 		data = page.encode("ISO-8859-1")
 	
+	if (method == "HEAD"):
+		data = data.partition(b"\r\n\r\n")[0]
+	
 	# In ra ket qua nhan ve tu web server
 	# Neu khong co ky tu UNICODE trong data -> Moi dung duoc .decode (chuyen tu thong tin nhi phan sang string)
 	try:
@@ -188,7 +200,7 @@ def runTask(client, addr):
 			console.print(f"Message received")
 		except:
 			console.print("UnicodeDecodeError: 'utf-8' codec can't decode byte ...")
-			
+		
 		# In ra thong tin Client: thoi gian, dia chi IP
 		intro = str(datetime.now()) + " | Connect from " + str(addr)
 		console.print(intro, style="bold")
@@ -258,4 +270,3 @@ def main():
 		
 if __name__ == "__main__":
 	main()
-		
