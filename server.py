@@ -158,7 +158,7 @@ def proxy(msg):
 			else:
 				sendMsg = f"{method} {url} HTTP/1.1\r\n"
 				sendMsg += msg.decode("utf-8", "ignore").partition("\r\n")[2]
-				sendMsg.replace(b"\r\n\r\n", b"Connection: close\r\n\r\n")
+				sendMsg.replace(b"\r\n\r\n", b"\r\nConnection: close\r\n\r\n")
 				
 		else:
 			raise Exception("Unsupported Method: " + method)
