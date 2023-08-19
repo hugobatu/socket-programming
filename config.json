@@ -4,7 +4,9 @@
     "whitelisting_enable": false,
     "whitelisting": [
         "frogfind.com",
-        "oosc.online"
+        "oosc.online",
+        "theplantlist.org",
+        "targetedattacks.trendmicro.com"
     ],
     "time": "8-23",
     "ext_to_save": [
