@@ -7,21 +7,8 @@ from rich.console import Console
 console = Console()
 import datetime
 
-page = """HTTP/1.1 200 OK
-Cache-Control: no-cache, no-store, must-revalidate
-Pragma: no-cache
-Content-Type: text/html; charset=utf-8
-Expires: -1
-Server: Microsoft-IIS/10.0
-X-AspNetMvc-Version: 5.2
-X-AspNet-Version: 4.0.30319
-X-Powered-By: ASP.NET
-Date: Thu, 10 Aug 2023 16:02:17 GMT
-Connection: close
-Content-Length: 0
-
-
-"""
+with open("403.html", "r") as fp:
+	page = fp.read()
 
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
 host = 'localhost'
@@ -31,26 +18,31 @@ def abridgedPrint(data = b"", leadingArrow = True):
 	if leadingArrow:
 		console.print("--> :", style="bold cyan", end="")
 		
-	if len(data) > 1200:
-		data = data[:1200] + b"..."
+	if len(data) > 1400:
+		data = data[:1400] + b"..."
 		
 	try:
 		console.print(f"{data.decode()}\n", style="bold cyan")
 	except:
 		try:
-			console.print(data.encode("ISO-8859-1") + "\n", style="bold cyan")
+			console.print(data.decode("ISO-8859-1") + "\n", style="bold cyan")
 		except: 
-			print(f"{data}\n")
+			console.print(data.decode("ISO-8859-2", ) + "\n", style="bold cyan")
 
 def getConfig():
-	fileConfig = open('config.mèo')
+	fileConfig = open('config.json')
 	configs = json.load(fileConfig)
 	return configs['cache_time'], configs['time_out'], configs['whitelisting'], configs['time'], configs['ext_to_save']
 cache_time, time_out, whitelisting, allowed_time, ext_to_save = getConfig()
 
 def createFile(fileName, content):
 	# Neu extension cua file khong nam trong ext_to_save -> Khong luu cache
-	if not (fileName[-3:] == "all" or fileName[-3:] in ext_to_save or fileName[-4:] in ext_to_save):
+	save = False
+	for ext in ext_to_save:
+		if fileName.find("." + ext) != -1:
+			save = True
+	
+	if not save:
 		return
 	
 	try:
@@ -110,6 +102,9 @@ def checkCache(msg):
 		# fullPathName = c:/Users/phkhng/Documents/Code/socket-programming/cache/oosc.online/index
 		
 	fullPathName = fullPathName.replace("\\", "/")
+	special_characters=['@','#','$','*','&', '<', '>', '"', '|', '?', '=']
+	for char in special_characters:
+		fullPathName = fullPathName.replace(char, '_')
 	
 	data = b""
 	isExist = True
@@ -167,13 +162,48 @@ def proxy(msg):
 		console.print(sendMsg)
 		hostPage.send(sendMsg.encode())
 
-		# Nhan ve ket qua server vao tung mau kich thuoc 4096 -> Gop lai thanh mot bai hoan chinh
+		# Lay phan head cua response
 		data = b""
-		while True:
-			chunk = hostPage.recv(4096)
-			if len(chunk) == 0:     # No more data received, quitting
-				break
-			data = data + chunk
+		while data.find(b"\r\n\r\n") != -1:
+			data += hostPage.recv(1)
+		
+		# Lay tiep body cua response dua theo thong tin tu header
+		# Neu response su dung chunked
+		if (data.find(b"Transfer-Encoding:") != -1 and data.find(b"chunked", data.find(b"Transfer-Encoding:")) != -1):
+			print("Chunked")
+			length = b""
+			while True:
+				length += hostPage.recv(1)
+				if length.find(b"\r\n" != -1):
+					break
+			print(f"Size left: {sizeLeft}")
+			sizeLeft = int(length.replace(b"\r\n", ""),16)
+			
+			if sizeLeft <= 0:
+				data += b"\r\n"
+				
+			data += hostPage.recv(sizeLeft)
+			
+		# Neu response su dung content lenght -> lay kich thuoc tu Content-length va nhan goi tin ve cho den khi het kich thuoc do
+		elif (data.find(b"Content-Length:") != -1):
+			print("Content length")
+			sizeLeft = data.partition(b"Content-Length:")[2].partition(b"\r\n")
+			sizeLeft = int(sizeLeft, 16)
+			print(f"Size left: {sizeLeft}")
+			
+			while sizeLeft > 0:
+				chunk = hostPage.recv(4096)
+				data = data + chunk
+				sizeLeft - len(chunk)
+			
+		# Neu response khong su dung nhung cach tren
+		else:
+			print("Normal")
+			while True:
+				chunk = hostPage.recv(4096)
+				if len(chunk) == 0:     # No more data received, quitting
+					break
+				data = data + chunk
 		
 		createFile(fullPathName, data)
 	
@@ -240,7 +270,7 @@ def runTask(client, addr):
 		client.close()
 			
 def main():
-	print(f"cache_time: {cache_time}, whitelisting: {whitelisting}, time: {allowed_time}")
+	print(f"Caching Age: {cache_time}, Whitelist: {whitelisting}, Allowed time: {allowed_time}")
 	
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.bind((host, port))
@@ -253,9 +283,9 @@ def main():
 		try:
 			console.print("Waiting for new user", style="bold yellow")
 			client, addr = server.accept()
-			# thread = threading.Thread(target = runTask, args = (client, addr))
-			# thread.start()
-			runTask(client, addr)
+			thread = threading.Thread(target = runTask, args = (client, addr))
+			thread.start()
+			# runTask(client, addr)
 			
 		except KeyboardInterrupt:
 			console.print("Closing program")

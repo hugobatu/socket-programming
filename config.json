@@ -1,7 +1,8 @@
 {
     "cache_time": 900,
     "time_out": 8,
-    "whitelisting": [],
+    "whitelisting": [
+    ],
     "time": "8-23",
     "ext_to_save": [
         "ase",
