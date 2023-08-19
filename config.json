@@ -1,7 +1,10 @@
 {
-    "cache_time": 900,
+    "cache_time": 1,
     "time_out": 8,
+    "whitelisting_enable": false,
     "whitelisting": [
+        "frogfind.com",
+        "oosc.online"
     ],
     "time": "8-23",
     "ext_to_save": [

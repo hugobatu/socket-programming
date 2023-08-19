@@ -18,8 +18,8 @@ def abridgedPrint(data = b"", leadingArrow = True):
 	if leadingArrow:
 		console.print("--> :", style="bold cyan", end="")
 		
-	if len(data) > 1400:
-		data = data[:1400] + b"..."
+	if len(data) > 2000:
+		data = data[:2000] + b"..."
 		
 	try:
 		console.print(f"{data.decode()}\n", style="bold cyan")
@@ -27,13 +27,13 @@ def abridgedPrint(data = b"", leadingArrow = True):
 		try:
 			console.print(data.decode("ISO-8859-1") + "\n", style="bold cyan")
 		except: 
-			console.print(data.decode("ISO-8859-2", ) + "\n", style="bold cyan")
+			console.print(data.decode("ISO-8859-2", "ignore") + "\n", style="bold cyan")
 
 def getConfig():
 	fileConfig = open('config.json')
 	configs = json.load(fileConfig)
-	return configs['cache_time'], configs['time_out'], configs['whitelisting'], configs['time'], configs['ext_to_save']
-cache_time, time_out, whitelisting, allowed_time, ext_to_save = getConfig()
+	return configs['cache_time'], configs['time_out'], configs['whitelisting_enable'], configs['whitelisting'], configs['time'], configs['ext_to_save']
+cache_time, time_out, whitelisting_enable, whitelisting, allowed_time, ext_to_save = getConfig()
 
 def createFile(fileName, content):
 	# Neu extension cua file khong nam trong ext_to_save -> Khong luu cache
@@ -173,16 +173,25 @@ def proxy(msg):
 			print("Chunked")
 			length = b""
 			while True:
-				length += hostPage.recv(1)
-				if length.find(b"\r\n" != -1):
-					break
-			print(f"Size left: {sizeLeft}")
-			sizeLeft = int(length.replace(b"\r\n", ""),16)
-			
-			if sizeLeft <= 0:
-				data += b"\r\n"
+				# Lay kich thuoc cho block du lieu tiep theo
+				while True:
+					length += hostPage.recv(1)
+					if length.find(b"\r\n" != -1):
+						break
+				print(f"Size left: {sizeLeft}")
+				sizeLeft = int(length.replace(b"\r\n", ""), 16)
 				
-			data += hostPage.recv(sizeLeft)
+				if sizeLeft <= 0:
+					data += b"\r\n"
+					break
+				else:
+					# Nhan phan goi tin con lai, append vao data
+					chunk = b""
+					while sizeLeft > 0:
+						chunk = hostPage.recv(min(sizeLeft, 4096)) + b"\r\n"
+						sizeLeft -= len(chunk)
+						data += chunk
+				
 			
 		# Neu response su dung content lenght -> lay kich thuoc tu Content-length va nhan goi tin ve cho den khi het kich thuoc do
 		elif (data.find(b"Content-Length:") != -1):
@@ -256,7 +265,7 @@ def runTask(client, addr):
 		method, url, host = getRequestInfo(msg)
 		
 		# Kiem tra ten mien truy cap
-		if len(whitelisting) > 0 and not (host in whitelisting):
+		if whitelisting_enable and not (host in whitelisting):
 			console.print("Client must not access this domain: " + host, style="red")
 			client.send(page.encode())
 			client.close()
@@ -275,7 +284,7 @@ def main():
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.bind((host, port))
 
-	server.listen(3) # 3 ở đây có nghĩa chỉ chấp nhận 3 kết nối
+	server.listen(10)
 	console.print("Server listening on port", port)
 
 
