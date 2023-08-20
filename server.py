@@ -1,6 +1,5 @@
 import socket 
 import threading
-import configparser
 import json
 import os
 from rich.console import Console
@@ -11,8 +10,8 @@ with open("403.html", "r") as fp:
 	page = fp.read()
 
 # Định nghĩa host và port mà server sẽ chạy và lắng nghe
-host = 'localhost'
-port = 4000
+host = '127.0.0.1'
+port = 8888
 
 def abridgedPrint(data = b"", leadingArrow = True):
 	if leadingArrow:

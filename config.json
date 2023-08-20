@@ -1,6 +1,6 @@
 {
     "cache_time": 900,
-    "time_out": 8,
+    "time_out": 5,
     "whitelisting_enable": false,
     "whitelisting": [
         "frogfind.com",
