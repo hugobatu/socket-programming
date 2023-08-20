@@ -1,5 +1,5 @@
 {
-    "cache_time": 1,
+    "cache_time": 900,
     "time_out": 8,
     "whitelisting_enable": false,
     "whitelisting": [
@@ -8,7 +8,8 @@
         "theplantlist.org",
         "targetedattacks.trendmicro.com"
     ],
-    "time": "8-23",
+    "time_enable": false,
+    "time": "8-22",
     "ext_to_save": [
         "ase",
         "art",

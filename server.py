@@ -25,15 +25,15 @@ def abridgedPrint(data = b"", leadingArrow = True):
 		console.print(f"{data.decode()}\n", style="bold cyan")
 	except:
 		try:
-			console.print(data.decode("ISO-8859-1") + "\n", style="bold cyan")
+			console.print(data.decode("ISO-8859-1", "ignore") + "\n", style="bold cyan")
 		except: 
 			console.print(data.decode("ISO-8859-2", "ignore") + "\n", style="bold cyan")
 
 def getConfig():
 	fileConfig = open('config.json')
 	configs = json.load(fileConfig)
-	return configs['cache_time'], configs['time_out'], configs['whitelisting_enable'], configs['whitelisting'], configs['time'], configs['ext_to_save']
-cache_time, time_out, whitelisting_enable, whitelisting, allowed_time, ext_to_save = getConfig()
+	return configs['cache_time'], configs['time_out'], configs['whitelisting_enable'], configs['whitelisting'], configs['time_enable'], configs['time'], configs['ext_to_save']
+cache_time, time_out, whitelisting_enable, whitelisting, time_enable, allowed_time, ext_to_save = getConfig()
 
 def createFile(fileName, content):
 	# Neu extension cua file khong nam trong ext_to_save -> Khong luu cache
@@ -219,7 +219,7 @@ def proxy(msg):
 	# Ket noi khong thanh cong -> data = page (da tao tu truoc)
 	except Exception as e:
 		console.print(e, style="red")
-		data = page.encode("ISO-8859-1")
+		data = page.encode("ISO-8859-1", "ignore")
 	
 	if (method == "HEAD"):
 		data = data.partition(b"\r\n\r\n")[0]
@@ -253,7 +253,7 @@ def runTask(client, addr):
 		abridgedPrint(msg, False)
 		
 		# Kiem tra thoi gian truy cap
-		if (allowed_time != ""):
+		if (time_enable):
 			start = datetime.time(int(allowed_time.partition("-")[0]), 0)
 			end = datetime.time(int(allowed_time.partition("-")[2]), 0)
 			if not (start <= datetime.datetime.today().time() <= end):
@@ -279,7 +279,7 @@ def runTask(client, addr):
 		client.close()
 			
 def main():
-	print(f"Caching Age: {cache_time}, Whitelist: {whitelisting}, Allowed time: {allowed_time}")
+	print(f"Caching Age: {cache_time}s; {'Whitelist: ' + ', '.join(whitelisting) + '; ' if (whitelisting_enable) else ''}{'Allowed time: ' + allowed_time if (time_enable) else ''}")
 	
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.bind((host, port))
@@ -292,9 +292,9 @@ def main():
 		try:
 			console.print("Waiting for new user", style="bold yellow")
 			client, addr = server.accept()
-			thread = threading.Thread(target = runTask, args = (client, addr))
-			thread.start()
-			# runTask(client, addr)
+			# thread = threading.Thread(target = runTask, args = (client, addr))
+			# thread.start()
+			runTask(client, addr)
 			
 		except KeyboardInterrupt:
 			console.print("Closing program")
