@@ -292,9 +292,9 @@ def main():
 		try:
 			console.print("Waiting for new user", style="bold yellow")
 			client, addr = server.accept()
-			# thread = threading.Thread(target = runTask, args = (client, addr))
-			# thread.start()
-			runTask(client, addr)
+			thread = threading.Thread(target = runTask, args = (client, addr))
+			thread.start()
+			# runTask(client, addr)
 			
 		except KeyboardInterrupt:
 			console.print("Closing program")
